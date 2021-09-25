@@ -218,25 +218,24 @@ public class TupleDesc implements Serializable {
 
     public boolean equals(Object o) {
         // some code goes here
-        if(o == null)
+        if (o == null) {
             return false;
-        if(o == this)
-            return true;
-        if(!(o instanceof TupleDesc))
-            return false;
-
-        TupleDesc tdo = (TupleDesc) o;
-        if(this.numFields() != tdo.numFields())
-            return false;
-        Iterator<TDItem> it1 = tdo.iterator();
-        Iterator<TDItem> it2 = this.iterator();
-        while(it2.hasNext())
-        {
-            // override equals in TDItem
-            if(!(it1.next().equals(it2.next())))
-                return false;
         }
-        return true;
+        try {
+            TupleDesc other = (TupleDesc)o;
+            if (other.numFields() != this.numFields()) {
+                return false;
+            }
+            for (int i = 0; i < other.numFields(); ++i) {
+                if (this.getFieldType(i) != other.getFieldType(i)
+                        || this.getFieldName(i) != other.getFieldName(i)) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (ClassCastException e) {
+            return false;
+        }
     }
 
     public int hashCode() {

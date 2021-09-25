@@ -22,6 +22,23 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Threadsafe
  */
 public class Catalog {
+    public static class Table{
+        private DbFile file;
+        private String name;
+        private String pkeyField;
+
+        public Table(DbFile file, String name, String pkeyField){
+            this.file = file;
+            this.name = name;
+            this.pkeyField = pkeyField;
+        }
+
+        public DbFile getFile(){
+            return file;
+        }
+    }
+
+    private ConcurrentHashMap<Integer, Table> tableMap;
 
     /**
      * Constructor.
@@ -29,6 +46,7 @@ public class Catalog {
      */
     public Catalog() {
         // some code goes here
+        this.tableMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -42,6 +60,12 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
+        try {
+            int id = this.getTableId(name);
+            this.tableMap.remove(id);
+        } catch (NoSuchElementException e) {
+        }
+        this.tableMap.put(file.getId(), new Table(file, name, pkeyField));
     }
 
     public void addTable(DbFile file, String name) {
@@ -65,7 +89,12 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        return 0;
+        for (Integer tableId : this.tableMap.keySet()) {
+            if (this.tableMap.get(tableId).name.equals(name)) {
+                return tableId;
+            }
+        }
+        throw new NoSuchElementException();
     }
 
     /**
@@ -76,7 +105,9 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        if(tableMap.get(tableid) == null)
+            throw new NoSuchElementException();
+        return tableMap.get(tableid).getFile().getTupleDesc();
     }
 
     /**
@@ -87,27 +118,38 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        for (Integer id : tableMap.keySet()){
+            if (id==tableid)
+                return tableMap.get(id).file;
+        }throw new NoSuchElementException();
     }
 
     public String getPrimaryKey(int tableid) {
         // some code goes here
-        return null;
+        for (Integer id : tableMap.keySet()){
+            if (id==tableid)
+                return tableMap.get(id).pkeyField;
+        }throw new NoSuchElementException();
     }
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-        return null;
+        return tableMap.keySet().iterator();
     }
 
     public String getTableName(int id) {
         // some code goes here
+        for (Integer i : tableMap.keySet()){
+            if (i==id)
+                return tableMap.get(i).name;
+        }
         return null;
     }
     
     /** Delete all tables from the catalog */
     public void clear() {
         // some code goes here
+        tableMap.clear();
     }
     
     /**
